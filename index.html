@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>3-Layer PNG Parallax</title>
+<style>
+  body {
+    margin: 0;
+    background: #111;
+    overflow: hidden;
+  }
+  #scene {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    touch-action: none;
+  }
+  .layer {
+    position: absolute;
+    top: 0; left: 0;
+    width: 110%; /* extra to avoid gaps when moving */
+    height: 110%;
+    object-fit: cover;
+    pointer-events: none;
+    will-change: transform;
+  }
+</style>
+</head>
+<body>
+
+<div id="scene">
+  <img src="bg grass.png"  class="layer" data-depth="0.1">
+  <img src="mid Temple.png" class="layer" data-depth="0.3">
+  <img src="fg Mahalakshmi.png"  class="layer" data-depth="0.6">
+</div>
+
+<script>
+const layers = document.querySelectorAll('.layer');
+let targetX = 0, targetY = 0;
+let currentX = 0, currentY = 0;
+const smoothing = 0.08; // easing factor
+
+// Update positions on mouse move
+document.addEventListener('mousemove', e => {
+  const cx = window.innerWidth / 2;
+  const cy = window.innerHeight / 2;
+  targetX = (e.clientX - cx) / cx; // -1..1
+  targetY = (e.clientY - cy) / cy; // -1..1
+});
+
+// Optional: Device orientation support
+if ('DeviceOrientationEvent' in window) {
+  window.addEventListener('deviceorientation', e => {
+    const gamma = e.gamma || 0; // left-right [-90,90]
+    const beta  = e.beta || 0;  // front-back [-180,180]
+    targetX = gamma / 30; // scale to about -1..1
+    targetY = beta / 30;
+  });
+}
+
+function animate() {
+  // Smooth interpolation
+  currentX += (targetX - currentX) * smoothing;
+  currentY += (targetY - currentY) * smoothing;
+
+  layers.forEach(layer => {
+    const depth = parseFloat(layer.dataset.depth);
+    const xMove = currentX * depth * 50; // movement scaling
+    const yMove = currentY * depth * 50;
+    layer.style.transform = `translate(${xMove}px, ${yMove}px)`;
+  });
+
+  requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+
+</body>
+</html>
